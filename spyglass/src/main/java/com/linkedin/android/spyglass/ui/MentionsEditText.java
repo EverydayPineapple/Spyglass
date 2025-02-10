@@ -86,6 +86,7 @@ public class MentionsEditText extends EditText implements TokenSource {
     private QueryTokenReceiver mQueryTokenReceiver;
     private SuggestionsVisibilityManager mSuggestionsVisibilityManager;
 
+    private List<PlaceholderSpan> mPlaceholderSpans = new ArrayList<>();
     private List<MentionWatcher> mMentionWatchers = new ArrayList<>();
     private List<TextWatcher> mExternalTextWatchers = new ArrayList<>();
     private final MyWatcher mInternalTextWatcher = new MyWatcher();
@@ -724,12 +725,12 @@ public class MentionsEditText extends EditText implements TokenSource {
         int wordStart = findStartOfWord(text, index);
         Editable editable = getText();
         MentionSpan[] mentionSpansInCurrentWord = editable.getSpans(wordStart, index, MentionSpan.class);
+        mPlaceholderSpans.clear();
         for (MentionSpan span : mentionSpansInCurrentWord) {
             if (span.getDisplayMode() != Mentionable.MentionDisplayMode.NONE) {
                 int spanStart = editable.getSpanStart(span);
                 int spanEnd = editable.getSpanEnd(span);
-                editable.setSpan(new PlaceholderSpan(span, spanStart, spanEnd),
-                        spanStart, spanEnd, Spanned.SPAN_EXCLUSIVE_INCLUSIVE);
+                mPlaceholderSpans.add(new PlaceholderSpan(span, spanStart, spanEnd));
                 editable.removeSpan(span);
             }
         }
@@ -781,7 +782,7 @@ public class MentionsEditText extends EditText implements TokenSource {
     }
 
     /**
-     * Removes any {@link com.linkedin.android.spyglass.ui.MentionsEditText.DeleteSpan}s and the text within them from
+     * Removes any {@link DeleteSpan}s and the text within them from
      * the given text.
      *
      * @param text the editable containing DeleteSpans to remove
@@ -805,9 +806,8 @@ public class MentionsEditText extends EditText implements TokenSource {
      * @param text the final version of the text after it was changed
      */
     private void replacePlaceholdersWithCorrespondingMentionSpans(@NonNull Editable text) {
-        PlaceholderSpan[] tempSpans = text.getSpans(0, text.length(), PlaceholderSpan.class);
-        for (PlaceholderSpan span : tempSpans) {
-            int spanStart = text.getSpanStart(span);
+        for (PlaceholderSpan span : mPlaceholderSpans) {
+            int spanStart = span.originalStart;
             String mentionDisplayString = span.holder.getDisplayString();
             int end = Math.min(spanStart + mentionDisplayString.length(), text.length());
             text.replace(spanStart, end, mentionDisplayString);
