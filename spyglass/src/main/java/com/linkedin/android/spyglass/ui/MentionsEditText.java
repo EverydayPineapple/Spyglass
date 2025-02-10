@@ -782,7 +782,7 @@ public class MentionsEditText extends EditText implements TokenSource {
     }
 
     /**
-     * Removes any {@link DeleteSpan}s and the text within them from
+     * Removes any {@link com.linkedin.android.spyglass.ui.MentionsEditText.DeleteSpan}s and the text within them from
      * the given text.
      *
      * @param text the editable containing DeleteSpans to remove
